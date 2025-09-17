@@ -1,12 +1,22 @@
 package com.phonebook.tests;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
+import com.phonebook.data.ContactData;
+import com.phonebook.data.UserData;
+import com.phonebook.models.Contact;
+import com.phonebook.models.User;
+import com.phonebook.utils.DataProviders;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class AddContactTests extends TestBase{
@@ -14,51 +24,56 @@ public class AddContactTests extends TestBase{
     //pre-condition login
     @BeforeMethod
     public void precondition(){
-        click(By.cssSelector("[href='/login']"));
-        type(By.name("email"), "olya775@gmail.com");
-        type(By.name("password"), "12345Qwe!");
-        click(By.name("login"));
+            if (!app.getUser().isLoginLinkPresent()){
+                app.getUser().clickOnSignOutButton();
+        }
+        app.getUser().clickOnLoginLink();
+        app.getUser().fillRegisterLoginForm(new User().setEmail(UserData.EMAIL).setPassword(UserData.PASSWORD));
+        app.getUser().clickOnLoginButton();
     }
 
     @Test
     public void addContactPositiveTest(){
-        //click on link ADD
-        click(By.cssSelector("[href='/add']"));
-        //enter name
-        type(By.cssSelector("input:nth-child(1)"), "Alex");
-        //enter lastname
-        type(By.cssSelector("input:nth-child(2)"), "Bron");
-        //enter phone
-        type(By.cssSelector("input:nth-child(3)"), "12345678912");
-        //enter email
-        type(By.cssSelector("input:nth-child(4)"), "Alex775@gmail.com");
-        //enter address
-        type(By.cssSelector("input:nth-child(5)"), "Rishon");
-        //enter description
-        type(By.cssSelector("input:nth-child(6)"), "QA");
-        //click SAVE button
-        click(By.cssSelector(".add_form__2rsm2 button"));
-        //verify contact is added
-        Assert.assertTrue(isContactAdded("Alex"));
+
+        app.getContact().clickOnAddLink();
+        app.getContact().fillContactForm(new Contact()
+                .setName(ContactData.NAME)
+                .setLastName(ContactData.LASTNAME)
+                .setPhone(ContactData.PHONE)
+                .setEmail(ContactData.EMAIL)
+                .setAddress(ContactData.ADDRESS)
+                .setDescription(ContactData.DESCRIPTION));
+        app.getContact().clickOnSaveButton();
+        Assert.assertTrue(app.getContact().isContactAdded(ContactData.NAME));
 
     }
 
-    public boolean isContactAdded(String text) {
-        List<WebElement> contacts = driver.findElements(By.cssSelector("h2"));
-        for(WebElement element: contacts){
-            if(element.getText().contains(text))
-                return true;
-        }
-        return false;
+
+@Test(dataProvider = "addNewContact",dataProviderClass = DataProviders.class)
+public void addContactPositiveFromDataProviderTest(String name, String lastName, String phone, String email,
+                                                   String address, String description){
+    //click on link ADD
+    app.getContact().clickOnAddLink();
+    //enter name
+    app.getContact().fillContactForm(new Contact().setName(name).setLastName(lastName).setPhone(phone)
+            .setEmail(email).setAddress(address).setDescription(description));
+    //click on SAVE button
+    app.getContact().clickOnSaveButton();
+    //verify contact is added
+    Assert.assertTrue(app.getContact().isContactAdded(name));
+}
+
+    @Test(dataProvider = "addNewContactWithCsv",dataProviderClass = DataProviders.class)
+    public void addContactPositiveFromDataProviderWithCsvFileTest(Contact contact){
+        app.getContact().clickOnAddLink();
+        app.getContact().fillContactForm(contact);
+        app.getContact().clickOnSaveButton();
+        Assert.assertTrue(app.getContact().isContactAdded(contact.getName()));
     }
 
-    @AfterMethod
-    public void postCondition(){
-        //driver.findElement(By.cssSelector(".contact-item_card__2SOIM")).click();
-        click(By.cssSelector(".contact-item_card__2SOIM"));
-        //driver.findElement(By.xpath("//button[.='Remove']")).click();
-        click(By.xpath("//button[.='Remove']"));
-    }
+@AfterMethod
+public void postCondition(){
+    app.getContact().deleteContact();
 
-
+}
 }

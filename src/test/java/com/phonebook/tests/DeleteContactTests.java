@@ -1,58 +1,48 @@
 package com.phonebook.tests;
 
-import org.openqa.selenium.By;
+import com.phonebook.data.ContactData;
+import com.phonebook.data.UserData;
+import com.phonebook.models.Contact;
+import com.phonebook.models.User;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class DeleteContactTests extends TestBase {
-    //precondition
-    //login
-    //add
+
 
     @BeforeMethod
     public void precondition() {
-        click(By.cssSelector("[href='/login']"));
-        type(By.name("email"), "olya775@gmail.com");
-        type(By.name("password"), "12345Qwe!");
-        click(By.name("login"));
+            if (!app.getUser().isLoginLinkPresent()){
+                app.getUser().clickOnSignOutButton();
 
-        click(By.cssSelector("[href='/add']"));
-        type(By.cssSelector("input:nth-child(1)"), "Alex");
-        type(By.cssSelector("input:nth-child(2)"), "Bron");
-        type(By.cssSelector("input:nth-child(3)"), "12345678912");
-        type(By.cssSelector("input:nth-child(4)"), "Alex775@gmail.com");
-        type(By.cssSelector("input:nth-child(5)"), "Rishon");
-        type(By.cssSelector("input:nth-child(6)"), "QA");
-        click(By.cssSelector(".add_form__2rsm2 button"));
+        }
+        app.getUser().clickOnLoginLink();
+        app.getUser().fillRegisterLoginForm(new User().setEmail(UserData.EMAIL).setPassword(UserData.PASSWORD));
+        app.getUser().clickOnLoginButton();
+
+        app.getContact().clickOnAddLink();
+        app.getContact().fillContactForm(new Contact()
+                .setName(ContactData.NAME)
+                .setLastName(ContactData.LASTNAME)
+                .setPhone(ContactData.PHONE)
+                .setEmail(ContactData.EMAIL)
+                .setAddress(ContactData.ADDRESS)
+                .setDescription(ContactData.DESCRIPTION));
+        app.getContact().clickOnSaveButton();
     }
 
     @Test
-    public void deleteContactTest() {
-        int sizeBefore = sizeOfContacts();
+    public void deleteContactTest(){
+        int sizeBefore = app.getContact().sizeOfContacts();
         //click on the cart
-        click(By.cssSelector(".contact-item_card__2SOIM"));
-        click(By.xpath("//button[.='Remove']"));
-        pause(1000);
-        int sizeAfter = sizeOfContacts();
-        Assert.assertEquals(sizeAfter, sizeBefore - 1);
+        app.getContact().deleteContact();
+        app.getContact().pause(1000);
+        int sizeAfter = app.getContact().sizeOfContacts();
+        Assert.assertEquals(sizeAfter,sizeBefore - 1);
+        //click on Remove button
+        //verify contact is deleted(by size)
     }
 
-    private int sizeOfContacts() {
-        if (isElementPresent(By.cssSelector(".contact-item_card__2SOIM"))) {
-            return driver.findElements(By.cssSelector(".contact-item_card__2SOIM")).size();
-        }
-        return 0;
-    }
-
-    public void pause(int millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }
 
-//click on Remove button
-//verify contact is deleted(by size)
