@@ -29,6 +29,7 @@ public class LoginTests extends TestBase{
         app.getUser().fillRegisterLoginForm(new User().setPassword(UserData.PASSWORD));
         app.getUser().clickOnLoginButton();
         Assert.assertTrue(app.getUser().isAlertDisplayed());
+
     }
 
 }
